@@ -1,0 +1,128 @@
+W01 Assignment: Build .NET Applications with C# - Submission
+================================================================
+
+PART 1: Output from "Create a web API with ASP.NET Core controllers" module
+---------------------------------------------------------------------------
+
+This shows the existing content and the additional record added to the Pizzas List.
+
+GET Request to: http://localhost:5000/api/pizza
+
+Response:
+
+[Paste the actual JSON output from your API here when you run it]
+
+Instructions to get the actual output:
+1. Run "dotnet run" in the PizzaApi directory
+2. Open browser to http://localhost:5000/api/pizza
+3. Copy the JSON output and paste it above
+
+OR run the PowerShell script: .\get-api-output.ps1 (while API is running)
+
+//Here is the actual output:
+[
+  {
+    "id": 1,
+    "name": "Classic Italian",
+    "isGlutenFree": false
+  },
+  {
+    "id": 2,
+    "name": "Veggie",
+    "isGlutenFree": true
+  },
+  {
+    "id": 3,
+    "name": "Pepperoni",
+    "isGlutenFree": false
+  }
+]
+
+The output should show 3 pizzas:
+  - Id: 1, Name: "Classic Italian" (existing)
+  - Id: 2, Name: "Veggie" (existing)
+  - Id: 3, Name: "Pepperoni" (additional record added)
+
+
+PART 2: Sales Summary Function
+-------------------------------
+
+Here is the working sales summary function code:
+
+using System.Text;
+
+static void GenerateSalesSummaryReport(string rootDirectory)
+{
+    string storesDir = Path.Join(rootDirectory, "stores", "201");
+    
+    if (!Directory.Exists(storesDir))
+    {
+        Console.WriteLine("Stores directory not found.");
+        return;
+    }
+
+    var salesFiles = Directory.GetFiles(storesDir, "sales*.json");
+    
+    if (salesFiles.Length == 0)
+    {
+        Console.WriteLine("No sales files found.");
+        return;
+    }
+
+    StringBuilder report = new StringBuilder();
+    report.AppendLine("Sales Summary");
+    report.AppendLine("----------------------------");
+    
+    decimal totalSales = 0;
+    var details = new List<(string filename, decimal amount)>();
+
+    foreach (var file in salesFiles)
+    {
+        try
+        {
+            string content = File.ReadAllText(file);
+            // Simple JSON parsing - extract total value
+            var totalMatch = System.Text.RegularExpressions.Regex.Match(content, @"""total""\s*:\s*([0-9]+\.?[0-9]*)");
+            if (totalMatch.Success && decimal.TryParse(totalMatch.Groups[1].Value, out decimal amount))
+            {
+                string filename = Path.GetFileName(file);
+                totalSales += amount;
+                details.Add((filename, amount));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading file {file}: {ex.Message}");
+        }
+    }
+
+    report.AppendLine($" Total Sales: {totalSales:C}");
+    report.AppendLine();
+    report.AppendLine(" Details:");
+
+    foreach (var (filename, amount) in details)
+    {
+        report.AppendLine($"  {filename}: {amount:C}");
+    }
+
+    // Write report to file
+    string reportPath = Path.Join(storesDir, "sales-summary.txt");
+    File.WriteAllText(reportPath, report.ToString());
+    
+    // Also display to console
+    Console.WriteLine(report.ToString());
+    Console.WriteLine($"\nReport saved to: {reportPath}");
+}
+
+Example Output Format:
+---------------------
+
+Sales Summary
+----------------------------
+ Total Sales: $525,001.25
+
+ Details:
+  sales.json: $100,000.00
+  sales2.json: $250,000.50
+  sales3.json: $175,000.75
+
