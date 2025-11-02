@@ -9,9 +9,8 @@ obj/
 # User-specific files
 *.user
 *.suo
+pizzas.sln
 
 # Generated files
 api-output.txt
 stores/
-
-pizzas.sln
